@@ -19,9 +19,18 @@ enum class ToolError {
     Unknown
 };
 
+void PrintVersion(bool verbose = false) {
+    std::cout << "bsmtool v1.0.0 by Colleen (colleen05 on GitHub)." << std::endl;
+
+    if(verbose) {
+        std::cout << "Based on bsmlib version: 1.5.0." << std::endl;
+        std::cout << "This software is distributed under the MIT license." << std::endl;
+    }
+}
+
 void PrintHelp() {
+    PrintVersion();
     std::cout
-        << "bsmtool v1.0.0 by Colleen" << std::endl
         << std::endl
         << "Usage: bsm file (list | dump | get [keys] | remove [keys] | set {options})" << std::endl
         << "\t- When using 'list', bsmtool will list all keys and their values." << std::endl
@@ -33,7 +42,11 @@ void PrintHelp() {
         << "\t-i <name> <value>    Set integer value." << std::endl
         << "\t-f <name> <value>    Set float value." << std::endl
         << "\t-s <name> <value>    Set string value." << std::endl
-        << "\t-r <name> <file>     Set raw value using bytes from given file." << std::endl;
+        << "\t-r <name> <file>     Set raw value using bytes from given file." << std::endl
+        << std::endl
+        << "Universal options (other arguments will be ignored):" << std::endl
+        << "\t--help or -h       Display help." << std::endl
+        << "\t--version or -v    Display version info." << std::endl;
 }
 
 void PrintErr(ToolError errcode, std::vector<std::string> args = std::vector<std::string>()) {
@@ -63,7 +76,7 @@ void PrintErr(ToolError errcode, std::vector<std::string> args = std::vector<std
             break;
     }
 
-    std::cout << "Use option '--help' for help with using bsmtool." << std::endl;
+    std::cout << "Use option '--help' or '-h' for help with using bsmtool." << std::endl;
 }
 
 void PrintKey(bsmlib::Key &key, std::string keyname) {
@@ -182,9 +195,16 @@ int main(int argc, char *argv[]) {
 
     // Command validity check
     if( (args.empty()) ||
-        (std::find(args.begin(), args.end(), "--help") != args.end())
-    ) {
+        (std::find(args.begin(), args.end(), "--help") != args.end()) ||
+        (std::find(args.begin(), args.end(), "-h") != args.end()) ) {
+
         PrintHelp();
+        return 0;
+    }else if( (args.empty()) ||
+        (std::find(args.begin(), args.end(), "--version") != args.end()) ||
+        (std::find(args.begin(), args.end(), "-v") != args.end()) ) {
+
+        PrintVersion(true);
         return 0;
     }
 

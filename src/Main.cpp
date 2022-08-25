@@ -22,8 +22,7 @@ void PrintHelp() {
     std::cout
         << "bsmtool v1.0.0 by Colleen" << std::endl
         << std::endl
-        << "Usage: bsm file (new <name> | list | dump | get [keys] | remove [keys] | set {options})" << std::endl
-        << "\t- When using 'new', bsmtool will create a new BSM file." << std::endl
+        << "Usage: bsm file (list | dump | get [keys] | remove [keys] | set {options})" << std::endl
         << "\t- When using 'list', bsmtool will list all keys and their values." << std::endl
         << "\t- When using 'dump', bsmtool will dump 'raw' keys to appropriately named files." << std::endl
         << "\t- When using 'get', bsmtool will list specified keys." << std::endl
@@ -206,38 +205,18 @@ int main(int argc, char *argv[]) {
                     return 1;
                 }
 
-                // FIXME: Logic surrounding auomatic creation of BSM files when using "set" not working.
-
-                /*
-                Intended behaviour:
-
-                Does file exist?
-                    Yes ->
-                        Valid BSM?
-                            Yes -> OK. Go to next state.
-                            No -> Error.
-                    No ->
-                        Using 'set'?
-                            Yes -> Create new file.
-                            No -> Error.
-                */
-
                 // Load BSM if file exists. Create new BSM if file does not.
                 if(args.size() >= 2) {
-                    // Test if file failed to open
-                    if(!file.good()) {
-                        if(args[1] != "set") {
-                            PrintErr(ToolError::FileOpenError, {filename});
-                            file.close();
+                    // Does file open?
+                    if(file.good()) {
+                        // Check for BSM read error
+                        if(!data.Load(filename)) {
+                            PrintErr(ToolError::BSMReadError, {arg});
                             return 1;
                         }
-                    }
-
-                    // Try to load file as BSM data
-                    if(!data.Load(filename)) {
+                    }else {
                         if(args[1] != "set") {
-                            PrintErr(ToolError::BSMReadError, {filename});
-                            file.close();
+                            PrintErr(ToolError::FileOpenError, {arg});
                             return 1;
                         }
                     }
@@ -302,6 +281,8 @@ int main(int argc, char *argv[]) {
                             std::istreambuf_iterator<char>(infile),
                             std::istreambuf_iterator<char>()
                         );
+
+                        data.SetRaw(curname, infile_bytes);
 
                         // Clear & reset state
                         infile_bytes.clear();

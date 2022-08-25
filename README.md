@@ -5,16 +5,21 @@
 Executing `bsm --help` will yield help on syntax:
 ```
 $ bsm --help
-bsmtool v1.0.0 by Colleen
+bsmtool v1.0.0 by Colleen (colleen05 on GitHub).
 
-Usage: bsm file (get [keys] | remove [keys] | set [options] | --help)
-    - When using 'get', bsmtool will list specified keys.
-    - When using 'remove', bsmtool will remove (delete) specified keys.
-    - When using '--help', bsmtool will display this help message (and all other arguments will be ignored).
+Usage: bsm file (list | dump | get [keys] | remove [keys] | set {options})
+	- When using 'list', bsmtool will list all keys and their values.
+	- When using 'dump', bsmtool will dump 'raw' keys to appropriately named files.
+	- When using 'get', bsmtool will list specified keys.
+	- When using 'remove', bsmtool will remove (delete) specified keys.
 
 Options:
-    -i <name> <value>   Set integer value.
-    -f <name> <value>   Set float value.
-    -s <name> <value>   Set string value.
-    -r <name> <file>    Set raw value using bytes from given filename.
+	-i <name> <value>    Set integer value.
+	-f <name> <value>    Set float value.
+	-s <name> <value>    Set string value.
+	-r <name> <file>     Set raw value using bytes from given file.
+
+Universal options (other arguments will be ignored):
+	--help or -h       Display help.
+	--version or -v    Display version info.
 ```

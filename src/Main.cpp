@@ -1,5 +1,6 @@
 #include <bsmlib.hpp>
 #include <iostream>
+#include <filesystem>
 
 enum class ParseState {
     InFilename,
@@ -48,17 +49,21 @@ void PrintErr(ToolError errcode, std::vector<std::string> args = std::vector<std
             std::cerr << "Unkown action: \"" << args[0] << "\"." << std::endl;
             break;
         case ToolError::NoGivenAction:
-            std::cerr << "No given action." << std::endl;
+            std::cerr << "No given action for file \"" << args[0] << "\"." << std::endl;
             break;
         case ToolError::InvalidSyntax:
-            std::cerr << "Invalid syntax." << std::endl;
+            if(args.empty()) {
+                std::cerr << "Invalid syntax." << std::endl;
+            }else {
+                std::cerr << "Invalid syntax: " << args[0] << std::endl;
+            }
             break;
         default:
             std::cerr << "UNKOWN ERROR. THIS IS A BUG.";
             break;
     }
 
-    std::cout << "Use option '--help' for more information." << std::endl;
+    std::cout << "Use option '--help' for help with using bsmtool." << std::endl;
 }
 
 void PrintKey(bsmlib::Key &key, std::string keyname) {
@@ -189,6 +194,7 @@ int main(int argc, char *argv[]) {
     std::string curname = "";
     std::ifstream infile;
     std::vector<uint8_t> infile_bytes;
+    bsmlib::Key tmpkey;
 
     for(int i = 0; i < args.size(); i++) {
         auto &arg = args[i];
@@ -198,13 +204,6 @@ int main(int argc, char *argv[]) {
                 filename = arg;
                 file.open(filename);
 
-                // Make sure an action is actually given
-                if(i == args.size() - 1) {
-                    PrintErr(ToolError::NoGivenAction);
-                    file.close();
-                    return 1;
-                }
-
                 // Load BSM if file exists. Create new BSM if file does not.
                 if(args.size() >= 2) {
                     // Does file open?
@@ -212,18 +211,35 @@ int main(int argc, char *argv[]) {
                         // Check for BSM read error
                         if(!data.Load(filename)) {
                             PrintErr(ToolError::BSMReadError, {arg});
+                            file.close();
                             return 1;
                         }
                     }else {
                         if(args[1] != "set") {
                             PrintErr(ToolError::FileOpenError, {arg});
+                            file.close();
                             return 1;
                         }
                     }
+                }else {
+                    // Does file not open?
+                    if(!file.good()) {
+                        PrintErr(ToolError::FileOpenError, {arg});
+                        file.close();
+                        return 1;
+                    }
                 }
 
-                // Update state
+                // Make sure an action is actually given
+                if(i == args.size() - 1) {
+                    PrintErr(ToolError::NoGivenAction, {arg});
+                    file.close();
+                    return 1;
+                }
+
+                // Update state & close file
                 state = ParseState::InAction;
+                file.close();
 
                 break;
             case ParseState::InAction:
@@ -238,6 +254,7 @@ int main(int argc, char *argv[]) {
                     return 0;
                 }else if(arg == "remove") {
                     RemoveKeys(data, filename, std::vector(args.begin() + 2, args.end()));
+                    data.Save(filename);
                     return 0;
                 }else if(arg == "set") {
                     state = ParseState::InKeytype;
@@ -247,22 +264,37 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             case ParseState::InKeytype:
+                // Look for keytype
                 if(arg == "-i") {       curtype = bsmlib::KeyType::Integer;
                 }else if(arg == "-f") { curtype = bsmlib::KeyType::Float;
                 }else if(arg == "-s") { curtype = bsmlib::KeyType::String;
                 }else if(arg == "-r") { curtype = bsmlib::KeyType::Raw;
                 }else {
-                    PrintErr(ToolError::InvalidSyntax);
+                    PrintErr(ToolError::InvalidSyntax, {"Unknown key type option, \"" + arg + "\"."});
+                    return 1;
+                }
+
+                // Make sure a keyname is actually given.
+                if(i == args.size() - 1) {
+                    PrintErr(ToolError::InvalidSyntax, {"Key name was not given."});
                     return 1;
                 }
 
                 state = ParseState::InKeyname;
                 break;
             case ParseState::InKeyname:
+                // Make sure a value is actually given
+                if(i == args.size() - 1) {
+                    PrintErr(ToolError::InvalidSyntax, {"No value given for key, \"" + arg + "\"."});
+                    return 1;
+                }
+
+                // Set key name
                 curname = arg;
                 state = ParseState::InKeyvalue;
                 break;
             case ParseState::InKeyvalue:
+                // Write data to structure
                 switch(curtype) {
                     case bsmlib::KeyType::Integer:  data.SetInt(curname, std::atoi(arg.c_str()));   break;
                     case bsmlib::KeyType::Float:    data.SetFloat(curname, std::atof(arg.c_str())); break;
@@ -274,6 +306,7 @@ int main(int argc, char *argv[]) {
                         // Test file opened
                         if(!infile.good()) {
                             PrintErr(ToolError::FileOpenError, {arg});
+                            infile.close();
                             return 1;
                         }
 
@@ -284,12 +317,21 @@ int main(int argc, char *argv[]) {
 
                         data.SetRaw(curname, infile_bytes);
 
-                        // Clear & reset state
+                        // Clear & close file
                         infile_bytes.clear();
-                        state = ParseState::InKeytype;
+                        infile.close();
                         break;
                     default:
                         break;
+                }
+
+                tmpkey = data.GetKey(curname);
+                std::cout << "SET: ";
+                PrintKey(tmpkey, curname);
+
+                // Advance state if more arguments are given
+                if(i != args.size() - 1) {
+                    state = ParseState::InKeytype;
                 }
                 break;
             default:
@@ -299,7 +341,6 @@ int main(int argc, char *argv[]) {
     }
 
     data.Save(filename);
-    file.close();
 
     return 0;
 }

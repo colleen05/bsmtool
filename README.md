@@ -1,7 +1,7 @@
 # bsmtool - A command-line tool for creating and modifying BSM files.
 **bsmtool** provides functionality for manipulating BSM files (see: [bsmlib on GitHub](https://github.com/colleen05/bsmlib)) with easy-to-use syntax.
 
-## Syntax & using bsmtool
+## Syntax and Using bsmtool
 Executing `bsm --help` will yield help on syntax and general use of bsmtool:
 ```
 $ bsm --help

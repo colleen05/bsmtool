@@ -1,1 +1,1 @@
-g++ -o bin/bsm src/Main.cpp src/bsmlib.cpp -Iinclude -std=c++17
+g++ -O3 -o bin/bsm src/Main.cpp src/bsmlib.cpp -Iinclude -std=c++17

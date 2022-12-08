@@ -24,7 +24,7 @@ void PrintVersion(bool verbose = false) {
 
     if(verbose) {
         std::cout << "Based on bsmlib version: 1.5.0." << std::endl;
-        std::cout << "This software is distributed under the MIT license." << std::endl;
+        std::cout << "This software is distributed under the zlib license." << std::endl;
     }
 }
 

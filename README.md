@@ -1,6 +1,10 @@
 # bsmtool - A command-line tool for creating and modifying BSM files.
 **bsmtool** provides functionality for manipulating BSM files (see: [bsmlib on GitHub](https://github.com/colleen05/bsmlib)) with easy-to-use syntax.
 
+## :warning: :rotating_light: DISCONTINUED C++ PROJECT :rotating_light: :warning:
+I'm no longer using C++ for personal projects, thus this project's development has been discontinued.
+Check my GitHub or [**my website**](https://colleen05.me/) for projects coming in the future.
+
 ## Syntax and Using bsmtool
 Executing `bsm --help` will yield help on syntax and general use of bsmtool:
 ```
